@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 import re
-from asyncio import sleep
-from os import mkdir, remove
-from random import choice, randint
-from aiofiles import open
-from markovify import NewlineText
-from vkbottle.bot import Bot, Message
-from vkbottle.dispatch.rules.bot import ChatActionRule, FromUserRule
-from vkbottle.api import API
 from config import *
+from asyncio import sleep
+from aiofiles import open
+from os import mkdir, remove
+from vkbottle.api import API
+from markovify import NewlineText
+from random import choice, randint
+from vkbottle.bot import Bot, Message
 from vkbottle_types.objects import MessagesForward
+from vkbottle.dispatch.rules.bot import ChatActionRule, FromUserRule
 
 api = API(BOT_TOKEN)
 bot = Bot(BOT_TOKEN)
+chance = RESPONSE_CHANCE
 
 #приветствие в чате
 @bot.on.chat_message(ChatActionRule("chat_invite_user"))
@@ -30,9 +31,14 @@ async def help(message: Message) -> None:
 
 #Установка шанса на ответ
 async def setChance(message: Message) -> None:
-    if(str.isnumeric(message.text.split(' ')[1])):
-        RESPONSE_CHANCE = message.text.split(' ')[1]
-    await message.answer(f"темп ответа: {RESPONSE_CHANCE}")
+    try:
+        if(str.isnumeric(message.text.split(' ')[1])):
+            global chance
+            chance = int(message.text.split(' ')[1])
+    except:
+        pass
+    print(chance) #debug
+    await message.answer(f"темп ответа: {chance}")
 
 #отправка решения шара
 @bot.on.message(text="/шар")
@@ -67,7 +73,7 @@ async def poslovitsa(message: Message) -> None:
 #Разбор основных сообщений
 @bot.on.message(FromUserRule())
 async def talk(message: Message) -> None:
-    peer_id = message.peer_id
+    #peer_id = message.peer_id
     text = message.text.lower()
     # Задержка перед ответом
     await sleep(RESPONSE_DELAY)
@@ -93,18 +99,17 @@ async def talk(message: Message) -> None:
         # Запись нового сообщения в историю беседы
         async with open(f"db/general.txt", "a") as f:
             await f.write(f"\n{text}")
-    if randint(1, 100) > RESPONSE_CHANCE:
-        return
-    # Чтение истории беседы
-    async with open(f"db/general.txt") as f:
-        db = await f.read()
-    db = db.strip().lower()
-    # Генерация сообщения
-    text_model = NewlineText(input_text=db, well_formed=False, state_size=1)
-    sentence = text_model.make_sentence(tries=1000) or choice(db.splitlines())
-    await message.answer(sentence)
-
+        print(f"\n{text}")
+    if (randint(1, 100) < chance):
+        # Чтение истории беседы
+        async with open(f"db/general.txt") as f:
+            db = await f.read()
+        db = db.strip().lower()
+        # Генерация сообщения
+        text_model = NewlineText(input_text=db, well_formed=False, state_size=1)
+        sentence = text_model.make_sentence(tries=1000) or choice(db.splitlines())
+        await message.answer(sentence)
 
 if __name__ == "__main__":
-    pattern = re.compile(r"\[id(\d*?)\|.*?]")
+    #pattern = re.compile(r"\[id(\d*?)\|.*?]")
     bot.run_forever()
