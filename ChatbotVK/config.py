@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-BOT_TOKEN = "bae172c0ec3934abaa9786a0de3974380442e186c0d5a3dec51fa33c96045149f9490ce1bccdc4886c96f"
+with open("db/token.txt") as f:
+    BOT_TOKEN = f.read()
 # Задержка перед ответом бота в секундах.
 RESPONSE_DELAY = 1
 # Шанс ответа в процентах (от 1 до 100).
