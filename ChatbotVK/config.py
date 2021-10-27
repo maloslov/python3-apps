@@ -4,7 +4,7 @@ with open("db/token.txt") as f:
 # Задержка перед ответом бота в секундах.
 RESPONSE_DELAY = 1
 # Шанс ответа в процентах (от 1 до 100).
-RESPONSE_CHANCE = 60
+RESPONSE_CHANCE = 1
 #Список команд
 COMMANDS = """Команды:
 /команды - описание команд

@@ -14,6 +14,7 @@ from vkbottle.dispatch.rules.bot import ChatActionRule, FromUserRule
 api = API(BOT_TOKEN)
 bot = Bot(BOT_TOKEN)
 chance = RESPONSE_CHANCE
+greet = ""
 
 #приветствие в чате
 @bot.on.chat_message(ChatActionRule("chat_invite_user"))
@@ -70,6 +71,22 @@ async def poslovitsa(message: Message) -> None:
     async with open(f"db/poslovitsy.txt", "a") as f:
             await f.write(f"\n{sentence}")
 
+@bot.on.message(text="Толя")
+async def greeting(message: Message) -> None:
+    api.messages
+    global greet
+    if(message.from_id == 216672318):
+        greet = "батя, "
+    else: greet = "и тебе тоже "
+    async with open(f"db/greet.txt") as f:
+        db = await f.read()
+        db = db.strip().lower()
+    # Генерация сообщения
+    text_model = NewlineText(input_text=db, well_formed=False, state_size=1)
+    sentence = text_model.make_sentence(tries=1000) or choice(db.splitlines())
+    await message.answer(greet+sentence)
+    greet = ""
+
 #Разбор основных сообщений
 @bot.on.message(FromUserRule())
 async def talk(message: Message) -> None:
@@ -83,6 +100,8 @@ async def talk(message: Message) -> None:
         return await setChance(message)
     if(text.startswith("/команды")):
         return await help(message)
+    if("толя" in text):
+        return await greeting(message)
     if text:
         # Удаление пустых строк из полученного сообщения
         while "\n\n" in text:
